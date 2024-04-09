@@ -24,6 +24,7 @@
 #include "ili9341_gfx.h"
 #include "testimg.h"
 #include "pongColor.h"
+#include "ili9341_font.h"
 
 // Some helper macros
 #define bitset(word,   idx)  ((word) |=  (1<<(idx))) //Sets the bit number <idx> -- All other bits are not affected.
@@ -136,11 +137,10 @@ int main(void)
 	  itnNONE // Touch normalization: Not applicable
   );
 
-      // Additional initialization steps if needed
   //ili9341_fill_screen(ili9341_display, ILI9341_BLACK);
   ili9341_draw_bitmap_1b(ili9341_display, ILI9341_WHITE, ILI9341_BLACK, 0, 0, 320, 240, image_data_Pong);
   HAL_Delay(500);
-  ili9341_fill_screen(ili9341_display, ILI9341_BLACK);
+
 
   // Assuming `lcd` is an already initialized ili9341_t instance
   ili9341_color_t color = ILI9341_WHITE;
@@ -160,8 +160,27 @@ int main(void)
   int16_t ballY = 120;
   int16_t velocityX = 2;  // Initial velocity in the x-direction
   int16_t velocityY = 2;  // Initial velocity in the y-direction
-  //Draws the Arena:
-  //ili9341_draw_bitmap_1b(ili9341_display, ILI9341_WHITE, ILI9341_BLACK, 0, 0, 320, 240, image_data_Arena);
+  uint8_t playerScoreNum = 0;
+  uint8_t botScoreNum = 0;
+
+
+  // Define the text attributes
+  ili9341_text_attr_t playerScore;
+  playerScore.origin_x = 80;  // X coordinate of the top-left corner of the character
+  playerScore.origin_y = 10;  // Y coordinate of the top-left corner of the character
+  playerScore.fg_color = ILI9341_GREEN;  // Color of the character
+  playerScore.bg_color = ILI9341_BLACK;  // Background color
+  playerScore.font = &ili9341_font_16x26;  // Use the desired font from ili9341_font.h
+
+  // Define the text attributes
+  ili9341_text_attr_t botScore;
+  botScore.origin_x = 240;  // X coordinate of the top-left corner of the character
+  botScore.origin_y = 10;  // Y coordinate of the top-left corner of the character
+  botScore.fg_color = ILI9341_RED;  // Color of the character
+  playerScore.bg_color = ILI9341_BLACK;  // Background color
+  botScore.font = &ili9341_font_16x26;  // Use the desired font from ili9341_font.h
+
+
 
   //Values for potentiometer value:
   uint16_t potentiometer_value = 0;
@@ -177,10 +196,47 @@ int main(void)
 	potentiometer_value = (ADC1->DR);
   }
 
+  void drawArena() {
+	  ili9341_fill_screen(ili9341_display, ILI9341_BLACK);
+
+	  // Draw a vertical line on the left edge of the screen
+	  ili9341_fill_rect(ili9341_display, ILI9341_RED, 0, 0, 4, 240);
+
+	  // Draw a vertical line on the right edge of the screen
+	  ili9341_fill_rect(ili9341_display, ILI9341_GREEN, 316, 0, 4, 240);
+
+	  // Draw the dotted line
+	  for (int16_t yLine = 0; yLine < 240; yLine += 10) {
+	      ili9341_fill_rect(ili9341_display, ILI9341_WHITE, 159, yLine, 2, 5);
+	  }
+
+	  // Draw the character 'A' at the specified coordinates with the defined attributes
+	  ili9341_draw_char(ili9341_display, botScore, botScoreNum);
+	  ili9341_draw_char(ili9341_display, playerScore, playerScoreNum);
+
+  }
+
+  void updateArena() {
+	  // Draw a vertical line on the left edge of the screen
+	  ili9341_fill_rect(ili9341_display, ILI9341_RED, 0, 0, 4, 240);
+
+	  // Draw a vertical line on the right edge of the screen
+	  ili9341_fill_rect(ili9341_display, ILI9341_GREEN, 316, 0, 4, 240);
+
+	  // Draw the dotted line
+	  for (int16_t yLine = 0; yLine < 240; yLine += 10) {
+	      ili9341_fill_rect(ili9341_display, ILI9341_WHITE, 159, yLine, 2, 5);
+	  }
+
+	  // Draw the character 'A' at the specified coordinates with the defined attributes
+	  ili9341_draw_char(ili9341_display, botScore, (char)botScoreNum);
+	  ili9341_draw_char(ili9341_display, playerScore, (char)playerScoreNum);
+  }
+
   void updateBallPosition() {
       // Clear the old ball position
       ili9341_fill_circle(ili9341_display, ILI9341_BLACK, ballX, ballY, 4);
-
+      uint8_t side = 0;
       // Update the position of the ball based on its velocity
       ballX += velocityX;
       ballY += velocityY;
@@ -189,6 +245,13 @@ int main(void)
       if (ballX <= 0 || ballX >= 320) {
           // If it hits the left or right side, reverse its x-velocity
           velocityX *= -1;
+
+          if (ballX >= 320)
+        	  playerScoreNum++;
+
+          if (ballX <= 0)
+        	  botScoreNum++;
+
       }
 
       if (ballY <= 0 || ballY >= 240) {
@@ -278,14 +341,15 @@ int main(void)
   	  }
 
 
-  	  // Clear the portion of the screen where the rectangle was previously drawn
-  	  if (direction == 1 && playerY > 0) {
-  		  // If moving down and not at the top, clear the area above the new rectangle position
-  		  ili9341_fill_rect(ili9341_display, ILI9341_BLACK, playerX, playerY, width, new_y - playerY);
-  	  } else if (direction == -1 && playerY + height < 240) {
-  		  // If moving up and not at the bottom, clear the area below the new rectangle position
-  		  ili9341_fill_rect(ili9341_display, ILI9341_BLACK, playerX, playerY + height, width, movement_distance);
-  	  }
+  	// Clear the portion of the screen where the rectangle was previously drawn
+  	if (direction == 1 && playerY > 0) {
+  	    // If moving down and not at the top, clear the area above the new rectangle position
+  	    ili9341_fill_rect(ili9341_display, ILI9341_BLACK, playerX, playerY, width, new_y - playerY);
+  	} else if (direction == -1 && playerY + height < 240) {
+  	    // If moving up and not at the bottom, clear the area below the new rectangle position
+  	    ili9341_fill_rect(ili9341_display, ILI9341_BLACK, playerX, playerY + height, width, height + abs(movement_distance));
+  	}
+
 
   	  // Draw the rectangle at the new position
   	  ili9341_fill_rect(ili9341_display, color, playerX, new_y, width, height);
@@ -301,11 +365,12 @@ int main(void)
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
+  drawArena();
   while (1) {
 	  calculateRectangle();
 	  calculateOtherRectangle();
-	  //drawBall();
 	  updateBallPosition();
+	  updateArena();
   }
 
       /* USER CODE END WHILE */
