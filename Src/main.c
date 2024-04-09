@@ -74,7 +74,7 @@ static void MX_RTC_Init(void);
 static void MX_UCPD1_Init(void);
 static void MX_USB_PCD_Init(void);
 static void MX_SPI1_Init(void);
-//static void MX_ADC1_Init(void);
+static void MX_ADC1_Init(void);
 /* USER CODE BEGIN PFP */
 /* USER CODE END PFP */
 
@@ -118,7 +118,7 @@ int main(void)
   MX_UCPD1_Init();
   MX_USB_PCD_Init();
   MX_SPI1_Init();
-  //MX_ADC1_Init();
+  MX_ADC1_Init();
   /* USER CODE BEGIN 2 */
   setClks();
   setupADC();
@@ -212,44 +212,79 @@ int main(void)
 	potentiometer_value = (ADC1->DR);
   }
 
-  void drawArena() {
+  void drawMenu() {
 	  ili9341_fill_screen(ili9341_display, ILI9341_BLACK);
 
-	  // Draw a vertical line on the left edge of the screen
-	  ili9341_fill_rect(ili9341_display, ILI9341_RED, 0, 0, 4, 240);
+	  // Define the text attributes
+	  ili9341_text_attr_t menu;
+	  menu.origin_x = 120;  // X coordinate of the top-left corner of the character
+	  menu.origin_y = 95;  // Y coordinate of the top-left corner of the character
+	  menu.fg_color = ILI9341_WHITE;  // Color of the character
+	  menu.bg_color = ILI9341_BLACK;  // Background color
+	  menu.font = &ili9341_font_16x26;  // Use the desired font from ili9341_font.h
 
-	  // Draw a vertical line on the right edge of the screen
-	  ili9341_fill_rect(ili9341_display, ILI9341_GREEN, 316, 0, 4, 240);
+	  // Define the text attributes
+	  ili9341_text_attr_t play;
+	  play.origin_x = 130;  // X coordinate of the top-left corner of the character
+	  play.origin_y = 145;  // Y coordinate of the top-left corner of the character
+	  play.fg_color = ILI9341_WHITE;  // Color of the character
+	  play.bg_color = ILI9341_BLACK;  // Background color
+	  play.font = &ili9341_font_11x18;  // Use the desired font from ili9341_font.h
 
-	  // Draw the dotted line
-	  for (int16_t yLine = 0; yLine < 240; yLine += 10) {
-	      ili9341_fill_rect(ili9341_display, ILI9341_WHITE, 159, yLine, 2, 5);
+	  char myText[] = "PONG!";
+	  ili9341_draw_string(ili9341_display, menu, myText);
+
+	  char playText[] = "Play";
+	  ili9341_draw_string(ili9341_display, play, playText);
+
+	  HAL_Delay(2000);
+
+	  while(!(GPIOE->IDR & GPIO_IDR_ID15)) {
+		  ili9341_fill_rect(ili9341_display, ILI9341_WHITE, 130, 170, 44, 3);
 	  }
 
-	  // Draw the character 'A' at the specified coordinates with the defined attributes
-	  ili9341_draw_char(ili9341_display, botScore, '0' + botScoreNum);
-	  ili9341_draw_char(ili9341_display, playerScore, '0' + playerScoreNum);
-
-
-	  ili9341_draw_char(ili9341_display, countdown, '3');
-	  HAL_Delay(1000);
-	  ili9341_draw_char(ili9341_display, countdownOFF, '3');
-
-	  ili9341_draw_char(ili9341_display, countdown, '2');
-	  HAL_Delay(1000);
-	  ili9341_draw_char(ili9341_display, countdownOFF, '2');
-
-
-	  ili9341_draw_char(ili9341_display, countdown, '1');
-	  HAL_Delay(1000);
-	  ili9341_draw_char(ili9341_display, countdownOFF, '1');
-
-	  ili9341_draw_char(ili9341_display, countdown, 'GO');
-	  HAL_Delay(250);
-	  ili9341_draw_char(ili9341_display, countdownOFF, 'GO');
 
 
   }
+
+//  void drawArena() {
+//	  ili9341_fill_screen(ili9341_display, ILI9341_BLACK);
+//
+//	  // Draw a vertical line on the left edge of the screen
+//	  ili9341_fill_rect(ili9341_display, ILI9341_RED, 0, 0, 4, 240);
+//
+//	  // Draw a vertical line on the right edge of the screen
+//	  ili9341_fill_rect(ili9341_display, ILI9341_GREEN, 316, 0, 4, 240);
+//
+//	  // Draw the dotted line
+//	  for (int16_t yLine = 0; yLine < 240; yLine += 10) {
+//	      ili9341_fill_rect(ili9341_display, ILI9341_WHITE, 159, yLine, 2, 5);
+//	  }
+//
+//	  // Draw the character 'A' at the specified coordinates with the defined attributes
+//	  ili9341_draw_char(ili9341_display, botScore, '0' + botScoreNum);
+//	  ili9341_draw_char(ili9341_display, playerScore, '0' + playerScoreNum);
+//
+//
+//	  ili9341_draw_char(ili9341_display, countdown, '3');
+//	  HAL_Delay(1000);
+//	  ili9341_draw_char(ili9341_display, countdownOFF, '3');
+//
+//	  ili9341_draw_char(ili9341_display, countdown, '2');
+//	  HAL_Delay(1000);
+//	  ili9341_draw_char(ili9341_display, countdownOFF, '2');
+//
+//
+//	  ili9341_draw_char(ili9341_display, countdown, '1');
+//	  HAL_Delay(1000);
+//	  ili9341_draw_char(ili9341_display, countdownOFF, '1');
+//
+//	  ili9341_draw_char(ili9341_display, countdown, 'GO');
+//	  HAL_Delay(250);
+//	  ili9341_draw_char(ili9341_display, countdownOFF, 'GO');
+//
+//
+//  }
 
   void updateArena() {
 	  // Draw a vertical line on the left edge of the screen
@@ -400,23 +435,24 @@ int main(void)
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
-  drawArena();
+  drawMenu();
+  ili9341_fill_screen(ili9341_display, ILI9341_BLACK);
+
   while (1) {
+
+	  int pinValue = (GPIOE->IDR & GPIO_IDR_ID15) ? 1 : 0;
 	  calculateRectangle();
 	  calculateOtherRectangle();
 	  updateBallPosition();
 	  updateArena();
   }
 
-      /* USER CODE END WHILE */
+    /* USER CODE END WHILE */
 
-      /* USER CODE BEGIN 3 */
+    /* USER CODE BEGIN 3 */
 
-    /* USER CODE END 3 */
+  /* USER CODE END 3 */
 }
-
-
-
 
 /**
   * @brief System Clock Configuration
@@ -483,67 +519,67 @@ void SystemClock_Config(void)
   * @param None
   * @retval None
   */
-//static void MX_ADC1_Init(void)
-//{
-//
-//  /* USER CODE BEGIN ADC1_Init 0 */
+static void MX_ADC1_Init(void)
+{
+
+  /* USER CODE BEGIN ADC1_Init 0 */
 ////
-//  /* USER CODE END ADC1_Init 0 */
-//
-//  ADC_MultiModeTypeDef multimode = {0};
-//  ADC_ChannelConfTypeDef sConfig = {0};
-//
-//  /* USER CODE BEGIN ADC1_Init 1 */
+  /* USER CODE END ADC1_Init 0 */
+
+  ADC_MultiModeTypeDef multimode = {0};
+  ADC_ChannelConfTypeDef sConfig = {0};
+
+  /* USER CODE BEGIN ADC1_Init 1 */
 ////
-//  /* USER CODE END ADC1_Init 1 */
-//
-//  /** Common config
-//  */
-//  hadc1.Instance = ADC1;
-//  hadc1.Init.ClockPrescaler = ADC_CLOCK_ASYNC_DIV1;
-//  hadc1.Init.Resolution = ADC_RESOLUTION_12B;
-//  hadc1.Init.DataAlign = ADC_DATAALIGN_RIGHT;
-//  hadc1.Init.ScanConvMode = ADC_SCAN_DISABLE;
-//  hadc1.Init.EOCSelection = ADC_EOC_SINGLE_CONV;
-//  hadc1.Init.LowPowerAutoWait = DISABLE;
-//  hadc1.Init.ContinuousConvMode = DISABLE;
-//  hadc1.Init.NbrOfConversion = 1;
-//  hadc1.Init.DiscontinuousConvMode = DISABLE;
-//  hadc1.Init.ExternalTrigConv = ADC_SOFTWARE_START;
-//  hadc1.Init.ExternalTrigConvEdge = ADC_EXTERNALTRIGCONVEDGE_NONE;
-//  hadc1.Init.DMAContinuousRequests = DISABLE;
-//  hadc1.Init.Overrun = ADC_OVR_DATA_PRESERVED;
-//  hadc1.Init.OversamplingMode = DISABLE;
-//  if (HAL_ADC_Init(&hadc1) != HAL_OK)
-//  {
-//    Error_Handler();
-//  }
-//
-//  /** Configure the ADC multi-mode
-//  */
-//  multimode.Mode = ADC_MODE_INDEPENDENT;
-//  if (HAL_ADCEx_MultiModeConfigChannel(&hadc1, &multimode) != HAL_OK)
-//  {
-//    Error_Handler();
-//  }
-//
-//  /** Configure Regular Channel
-//  */
-//  sConfig.Channel = ADC_CHANNEL_1;
-//  sConfig.Rank = ADC_REGULAR_RANK_1;
-//  sConfig.SamplingTime = ADC_SAMPLETIME_2CYCLES_5;
-//  sConfig.SingleDiff = ADC_SINGLE_ENDED;
-//  sConfig.OffsetNumber = ADC_OFFSET_NONE;
-//  sConfig.Offset = 0;
-//  if (HAL_ADC_ConfigChannel(&hadc1, &sConfig) != HAL_OK)
-//  {
-//    Error_Handler();
-//  }
-//  /* USER CODE BEGIN ADC1_Init 2 */
+  /* USER CODE END ADC1_Init 1 */
+
+  /** Common config
+  */
+  hadc1.Instance = ADC1;
+  hadc1.Init.ClockPrescaler = ADC_CLOCK_ASYNC_DIV1;
+  hadc1.Init.Resolution = ADC_RESOLUTION_12B;
+  hadc1.Init.DataAlign = ADC_DATAALIGN_RIGHT;
+  hadc1.Init.ScanConvMode = ADC_SCAN_DISABLE;
+  hadc1.Init.EOCSelection = ADC_EOC_SINGLE_CONV;
+  hadc1.Init.LowPowerAutoWait = DISABLE;
+  hadc1.Init.ContinuousConvMode = DISABLE;
+  hadc1.Init.NbrOfConversion = 1;
+  hadc1.Init.DiscontinuousConvMode = DISABLE;
+  hadc1.Init.ExternalTrigConv = ADC_SOFTWARE_START;
+  hadc1.Init.ExternalTrigConvEdge = ADC_EXTERNALTRIGCONVEDGE_NONE;
+  hadc1.Init.DMAContinuousRequests = DISABLE;
+  hadc1.Init.Overrun = ADC_OVR_DATA_PRESERVED;
+  hadc1.Init.OversamplingMode = DISABLE;
+  if (HAL_ADC_Init(&hadc1) != HAL_OK)
+  {
+    Error_Handler();
+  }
+
+  /** Configure the ADC multi-mode
+  */
+  multimode.Mode = ADC_MODE_INDEPENDENT;
+  if (HAL_ADCEx_MultiModeConfigChannel(&hadc1, &multimode) != HAL_OK)
+  {
+    Error_Handler();
+  }
+
+  /** Configure Regular Channel
+  */
+  sConfig.Channel = ADC_CHANNEL_3;
+  sConfig.Rank = ADC_REGULAR_RANK_1;
+  sConfig.SamplingTime = ADC_SAMPLETIME_2CYCLES_5;
+  sConfig.SingleDiff = ADC_SINGLE_ENDED;
+  sConfig.OffsetNumber = ADC_OFFSET_NONE;
+  sConfig.Offset = 0;
+  if (HAL_ADC_ConfigChannel(&hadc1, &sConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN ADC1_Init 2 */
 ////
-//  /* USER CODE END ADC1_Init 2 */
-//
-//}
+  /* USER CODE END ADC1_Init 2 */
+
+}
 
 /**
   * @brief ICACHE Initialization Function
@@ -851,12 +887,6 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(GPIOE, &GPIO_InitStruct);
-
-  /*Configure GPIO pins : PB10 PB11 */
-  GPIO_InitStruct.Pin = GPIO_PIN_10|GPIO_PIN_11;
-  GPIO_InitStruct.Mode = GPIO_MODE_ANALOG;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
-  HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 
   /*Configure GPIO pin : UCPD_FLT_Pin */
   GPIO_InitStruct.Pin = UCPD_FLT_Pin;
