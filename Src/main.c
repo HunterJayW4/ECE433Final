@@ -168,7 +168,7 @@ int main(void)
   ili9341_text_attr_t playerScore;
   playerScore.origin_x = 80;  // X coordinate of the top-left corner of the character
   playerScore.origin_y = 10;  // Y coordinate of the top-left corner of the character
-  playerScore.fg_color = ILI9341_GREEN;  // Color of the character
+  playerScore.fg_color = ILI9341_RED;  // Color of the character
   playerScore.bg_color = ILI9341_BLACK;  // Background color
   playerScore.font = &ili9341_font_16x26;  // Use the desired font from ili9341_font.h
 
@@ -176,9 +176,25 @@ int main(void)
   ili9341_text_attr_t botScore;
   botScore.origin_x = 240;  // X coordinate of the top-left corner of the character
   botScore.origin_y = 10;  // Y coordinate of the top-left corner of the character
-  botScore.fg_color = ILI9341_RED;  // Color of the character
-  playerScore.bg_color = ILI9341_BLACK;  // Background color
+  botScore.fg_color = ILI9341_GREEN;  // Color of the character
+  botScore.bg_color = ILI9341_BLACK;  // Background color
   botScore.font = &ili9341_font_16x26;  // Use the desired font from ili9341_font.h
+
+  // Define the text attributes
+  ili9341_text_attr_t countdown;
+  countdown.origin_x = 160 - 8;  // X coordinate of the top-left corner of the character
+  countdown.origin_y = 120 - 13;  // Y coordinate of the top-left corner of the character
+  countdown.fg_color = ILI9341_WHITE;  // Color of the character
+  countdown.bg_color = ILI9341_BLACK;  // Background color
+  countdown.font = &ili9341_font_16x26;  // Use the desired font from ili9341_font.h
+
+  // Define the text attributes
+  ili9341_text_attr_t countdownOFF;
+  countdownOFF.origin_x = 160 - 8;  // X coordinate of the top-left corner of the character
+  countdownOFF.origin_y = 120 - 13;  // Y coordinate of the top-left corner of the character
+  countdownOFF.fg_color = ILI9341_BLACK;  // Color of the character
+  countdownOFF.bg_color = ILI9341_BLACK;  // Background color
+  countdownOFF.font = &ili9341_font_16x26;  // Use the desired font from ili9341_font.h
 
 
 
@@ -211,8 +227,27 @@ int main(void)
 	  }
 
 	  // Draw the character 'A' at the specified coordinates with the defined attributes
-	  ili9341_draw_char(ili9341_display, botScore, botScoreNum);
-	  ili9341_draw_char(ili9341_display, playerScore, playerScoreNum);
+	  ili9341_draw_char(ili9341_display, botScore, '0' + botScoreNum);
+	  ili9341_draw_char(ili9341_display, playerScore, '0' + playerScoreNum);
+
+
+	  ili9341_draw_char(ili9341_display, countdown, '3');
+	  HAL_Delay(1000);
+	  ili9341_draw_char(ili9341_display, countdownOFF, '3');
+
+	  ili9341_draw_char(ili9341_display, countdown, '2');
+	  HAL_Delay(1000);
+	  ili9341_draw_char(ili9341_display, countdownOFF, '2');
+
+
+	  ili9341_draw_char(ili9341_display, countdown, '1');
+	  HAL_Delay(1000);
+	  ili9341_draw_char(ili9341_display, countdownOFF, '1');
+
+	  ili9341_draw_char(ili9341_display, countdown, 'GO');
+	  HAL_Delay(250);
+	  ili9341_draw_char(ili9341_display, countdownOFF, 'GO');
+
 
   }
 
@@ -229,8 +264,8 @@ int main(void)
 	  }
 
 	  // Draw the character 'A' at the specified coordinates with the defined attributes
-	  ili9341_draw_char(ili9341_display, botScore, (char)botScoreNum);
-	  ili9341_draw_char(ili9341_display, playerScore, (char)playerScoreNum);
+	  ili9341_draw_char(ili9341_display, botScore, '0' + botScoreNum);
+	  ili9341_draw_char(ili9341_display, playerScore, '0' + playerScoreNum);
   }
 
   void updateBallPosition() {
