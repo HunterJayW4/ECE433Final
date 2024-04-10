@@ -162,6 +162,7 @@ int main(void)
   int16_t velocityY = 2;  // Initial velocity in the y-direction
   uint8_t playerScoreNum = 0;
   uint8_t botScoreNum = 0;
+  int pinValue = 1;
 
 
   // Define the text attributes
@@ -217,19 +218,27 @@ int main(void)
 
 	  // Define the text attributes
 	  ili9341_text_attr_t menu;
-	  menu.origin_x = 120;  // X coordinate of the top-left corner of the character
-	  menu.origin_y = 95;  // Y coordinate of the top-left corner of the character
+	  menu.origin_x = 10;  // X coordinate of the top-left corner of the character
+	  menu.origin_y = 45;  // Y coordinate of the top-left corner of the character
 	  menu.fg_color = ILI9341_WHITE;  // Color of the character
 	  menu.bg_color = ILI9341_BLACK;  // Background color
 	  menu.font = &ili9341_font_16x26;  // Use the desired font from ili9341_font.h
 
 	  // Define the text attributes
 	  ili9341_text_attr_t play;
-	  play.origin_x = 130;  // X coordinate of the top-left corner of the character
-	  play.origin_y = 145;  // Y coordinate of the top-left corner of the character
+	  play.origin_x = 10;  // X coordinate of the top-left corner of the character
+	  play.origin_y = 90;  // Y coordinate of the top-left corner of the character
 	  play.fg_color = ILI9341_WHITE;  // Color of the character
 	  play.bg_color = ILI9341_BLACK;  // Background color
 	  play.font = &ili9341_font_11x18;  // Use the desired font from ili9341_font.h
+
+	  // Define the text attributes
+	  ili9341_text_attr_t settings;
+	  settings.origin_x = 10;  // X coordinate of the top-left corner of the character
+	  settings.origin_y = 125;  // Y coordinate of the top-left corner of the character
+	  settings.fg_color = ILI9341_WHITE;  // Color of the character
+	  settings.bg_color = ILI9341_BLACK;  // Background color
+	  settings.font = &ili9341_font_11x18;  // Use the desired font from ili9341_font.h
 
 	  char myText[] = "PONG!";
 	  ili9341_draw_string(ili9341_display, menu, myText);
@@ -237,54 +246,62 @@ int main(void)
 	  char playText[] = "Play";
 	  ili9341_draw_string(ili9341_display, play, playText);
 
+	  char settingsText[] = "Settings";
+	  ili9341_draw_string(ili9341_display, settings, settingsText);
+
+	  ili9341_text_attr_t menuItems[] = {
+			  play,
+			  settings
+	  };
+
+	  int index = 0;
+	  int change = 0;
+	  int initialIndex;
+
 	  HAL_Delay(2000);
 
-	  while(!(GPIOE->IDR & GPIO_IDR_ID15)) {
-		  ili9341_fill_rect(ili9341_display, ILI9341_WHITE, 130, 170, 44, 3);
+  	  ili9341_fill_rect(ili9341_display, ILI9341_RED, menuItems[0].origin_x, menuItems[0].origin_y + 22, 40, 5);
+
+
+	  while(1) {
+		  pinValue = (GPIOA->IDR & GPIO_IDR_ID8) ? 1 : 0;
+		  readADC2();
+		  initialIndex = index;
+
+		  if (pinValue == 0 && index == 0){
+			  ili9341_fill_screen(ili9341_display, ILI9341_BLACK);
+			  break;
+		  }
+
+
+		  if (potentiometer_value < 1650){
+			  if (index == 1){
+				  index = 1;
+			  }else {
+				  index++;
+				  change = 1;
+			  }
+		  }else if(potentiometer_value > 1800){
+			  if (index == 0){
+				  index = 0;
+			  }else {
+				  index--;
+				  change = 1;
+			  }
+		  }
+
+		  if (change = 1)
+			  ili9341_fill_rect(ili9341_display, ILI9341_BLACK, menuItems[initialIndex].origin_x, menuItems[initialIndex].origin_y + 22, 40, 5);
+		  	  ili9341_fill_rect(ili9341_display, ILI9341_RED, menuItems[index].origin_x, menuItems[index].origin_y + 22, 40, 5);
+
+
+
+		  change = 0;
 	  }
 
 
 
   }
-
-//  void drawArena() {
-//	  ili9341_fill_screen(ili9341_display, ILI9341_BLACK);
-//
-//	  // Draw a vertical line on the left edge of the screen
-//	  ili9341_fill_rect(ili9341_display, ILI9341_RED, 0, 0, 4, 240);
-//
-//	  // Draw a vertical line on the right edge of the screen
-//	  ili9341_fill_rect(ili9341_display, ILI9341_GREEN, 316, 0, 4, 240);
-//
-//	  // Draw the dotted line
-//	  for (int16_t yLine = 0; yLine < 240; yLine += 10) {
-//	      ili9341_fill_rect(ili9341_display, ILI9341_WHITE, 159, yLine, 2, 5);
-//	  }
-//
-//	  // Draw the character 'A' at the specified coordinates with the defined attributes
-//	  ili9341_draw_char(ili9341_display, botScore, '0' + botScoreNum);
-//	  ili9341_draw_char(ili9341_display, playerScore, '0' + playerScoreNum);
-//
-//
-//	  ili9341_draw_char(ili9341_display, countdown, '3');
-//	  HAL_Delay(1000);
-//	  ili9341_draw_char(ili9341_display, countdownOFF, '3');
-//
-//	  ili9341_draw_char(ili9341_display, countdown, '2');
-//	  HAL_Delay(1000);
-//	  ili9341_draw_char(ili9341_display, countdownOFF, '2');
-//
-//
-//	  ili9341_draw_char(ili9341_display, countdown, '1');
-//	  HAL_Delay(1000);
-//	  ili9341_draw_char(ili9341_display, countdownOFF, '1');
-//
-//	  ili9341_draw_char(ili9341_display, countdown, 'GO');
-//	  HAL_Delay(250);
-//	  ili9341_draw_char(ili9341_display, countdownOFF, 'GO');
-//
-//
-//  }
 
   void updateArena() {
 	  // Draw a vertical line on the left edge of the screen
@@ -430,6 +447,33 @@ int main(void)
   	  HAL_Delay(10);
     }
 
+  void playGame() {
+	  calculateRectangle();
+	  calculateOtherRectangle();
+	  updateBallPosition();
+	  updateArena();
+
+	  if (playerScoreNum > 9){
+		  ili9341_fill_screen(ili9341_display, ILI9341_BLACK);
+		  playerScoreNum = 0;
+		  botScoreNum = 0;
+		  int16_t ballX = 0;
+		  int16_t ballY = 0;
+		  drawMenu();
+	  }
+	  if (botScoreNum > 9){
+		  ili9341_fill_screen(ili9341_display, ILI9341_BLACK);
+		  botScoreNum = 0;
+		  playerScoreNum = 0;
+		  int16_t ballX = 0;
+		  int16_t ballY = 0;
+		  drawMenu();
+	  }
+
+
+
+  }
+
   //initialize_ili9341();
   /* USER CODE END 2 */
 
@@ -439,12 +483,7 @@ int main(void)
   ili9341_fill_screen(ili9341_display, ILI9341_BLACK);
 
   while (1) {
-
-	  int pinValue = (GPIOE->IDR & GPIO_IDR_ID15) ? 1 : 0;
-	  calculateRectangle();
-	  calculateOtherRectangle();
-	  updateBallPosition();
-	  updateArena();
+	  playGame();
   }
 
     /* USER CODE END WHILE */
@@ -855,7 +894,6 @@ static void MX_GPIO_Init(void)
   __HAL_RCC_GPIOC_CLK_ENABLE();
   __HAL_RCC_GPIOA_CLK_ENABLE();
   __HAL_RCC_GPIOB_CLK_ENABLE();
-  __HAL_RCC_GPIOE_CLK_ENABLE();
   __HAL_RCC_GPIOG_CLK_ENABLE();
   HAL_PWREx_EnableVddIO2();
 
@@ -882,12 +920,6 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 
-  /*Configure GPIO pin : PE15 */
-  GPIO_InitStruct.Pin = GPIO_PIN_15;
-  GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
-  HAL_GPIO_Init(GPIOE, &GPIO_InitStruct);
-
   /*Configure GPIO pin : UCPD_FLT_Pin */
   GPIO_InitStruct.Pin = UCPD_FLT_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING;
@@ -900,6 +932,12 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(LED_GREEN_GPIO_Port, &GPIO_InitStruct);
+
+  /*Configure GPIO pin : PA8 */
+  GPIO_InitStruct.Pin = GPIO_PIN_8;
+  GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
+  GPIO_InitStruct.Pull = GPIO_PULLUP;
+  HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
 /* USER CODE BEGIN MX_GPIO_Init_2 */
 
