@@ -164,6 +164,12 @@ int main(void)
   uint8_t botScoreNum = 0;
   int pinValue = 1;
 
+  //Menu Vars
+  int index = 0;
+  int change = 0;
+  int initialIndex;
+  ili9341_text_attr_t menuItems[3];
+
 
   // Define the text attributes
   ili9341_text_attr_t playerScore;
@@ -214,6 +220,8 @@ int main(void)
   }
 
   void drawMenu() {
+	  initialIndex = 0;
+	  index = 0;
 	  ili9341_fill_screen(ili9341_display, ILI9341_BLACK);
 
 	  // Define the text attributes
@@ -240,29 +248,39 @@ int main(void)
 	  settings.bg_color = ILI9341_BLACK;  // Background color
 	  settings.font = &ili9341_font_11x18;  // Use the desired font from ili9341_font.h
 
+	  // Define the text attributes
+	  ili9341_text_attr_t help;
+	  help.origin_x = 10;  // X coordinate of the top-left corner of the character
+	  help.origin_y = 160;  // Y coordinate of the top-left corner of the character
+	  help.fg_color = ILI9341_WHITE;  // Color of the character
+	  help.bg_color = ILI9341_BLACK;  // Background color
+	  help.font = &ili9341_font_11x18;  // Use the desired font from ili9341_font.h
+
 	  char myText[] = "PONG!";
 	  ili9341_draw_string(ili9341_display, menu, myText);
 
-	  char playText[] = "Play";
+	  char playText[] = "play";
 	  ili9341_draw_string(ili9341_display, play, playText);
 
-	  char settingsText[] = "Settings";
+	  char settingsText[] = "settings";
 	  ili9341_draw_string(ili9341_display, settings, settingsText);
 
-	  ili9341_text_attr_t menuItems[] = {
-			  play,
-			  settings
-	  };
+	  char helpText[] = "help";
+	  ili9341_draw_string(ili9341_display, help, helpText);
 
-	  int index = 0;
-	  int change = 0;
-	  int initialIndex;
+	  menuItems[0] = play;
+	  menuItems[1] = settings;
+	  menuItems[2] = help;
 
-	  HAL_Delay(2000);
+	  ili9341_fill_rect(ili9341_display, ILI9341_RED, menuItems[0].origin_x, menuItems[0].origin_y + 22, 40, 5);
+  }
 
-  	  ili9341_fill_rect(ili9341_display, ILI9341_RED, menuItems[0].origin_x, menuItems[0].origin_y + 22, 40, 5);
-
-
+  void menuLogic() {
+	  drawMenu();
+	  int16_t ballX = 160, ballY = 120; // Initial position in the center of the screen
+	  int16_t oldBallX = 160, oldBallY = 120; // Initial position in the center of the screen
+	  const int16_t ballRadius = 5; // Ball radius
+	  int16_t velX = 6, velY = 6; // Velocity components for 45-degree movement
 	  while(1) {
 		  pinValue = (GPIOA->IDR & GPIO_IDR_ID8) ? 1 : 0;
 		  readADC2();
@@ -273,10 +291,31 @@ int main(void)
 			  break;
 		  }
 
+		  if (pinValue == 0 && index == 1) {
+
+		  }
+
+		  if (pinValue == 0 && index == 2) {
+			  ili9341_draw_bitmap_1b(ili9341_display, ILI9341_WHITE, ILI9341_BLACK, 0, 0, 320, 240, help1);
+			  HAL_Delay(1000);
+			  while(1) {
+				  pinValue = (GPIOA->IDR & GPIO_IDR_ID8) ? 1 : 0;
+				  if (pinValue == 0)
+					  break;
+			  }
+			  ili9341_draw_bitmap_1b(ili9341_display, ILI9341_WHITE, ILI9341_BLACK, 0, 0, 320, 240, help2);
+			  HAL_Delay(1000);
+			  while(1) {
+				  pinValue = (GPIOA->IDR & GPIO_IDR_ID8) ? 1 : 0;
+				  if (pinValue == 0)
+					  break;
+			  }
+			  drawMenu();
+		  }
 
 		  if (potentiometer_value < 1650){
-			  if (index == 1){
-				  index = 1;
+			  if (index == 2){
+				  index = 2;
 			  }else {
 				  index++;
 				  change = 1;
@@ -290,16 +329,39 @@ int main(void)
 			  }
 		  }
 
-		  if (change = 1)
-			  ili9341_fill_rect(ili9341_display, ILI9341_BLACK, menuItems[initialIndex].origin_x, menuItems[initialIndex].origin_y + 22, 40, 5);
-		  	  ili9341_fill_rect(ili9341_display, ILI9341_RED, menuItems[index].origin_x, menuItems[index].origin_y + 22, 40, 5);
+		  if (change == 1){
+			  if (initialIndex == 1) {
+				  ili9341_fill_rect(ili9341_display, ILI9341_BLACK, menuItems[initialIndex].origin_x, menuItems[initialIndex].origin_y + 22, 100, 5);
+			  } else {
+				  ili9341_fill_rect(ili9341_display, ILI9341_BLACK, menuItems[initialIndex].origin_x, menuItems[initialIndex].origin_y + 22, 40, 5);
+			  }
 
-
+			  if (index == 1) {
+				  ili9341_fill_rect(ili9341_display, ILI9341_RED, menuItems[index].origin_x, menuItems[index].origin_y + 22, 100, 5);
+			  } else {
+				  ili9341_fill_rect(ili9341_display, ILI9341_RED, menuItems[index].origin_x, menuItems[index].origin_y + 22, 40, 5);
+			  }
+		  	  //HAL_Delay(125);
+		  }
 
 		  change = 0;
+
+		  //Bouncing ball around the menu:
+		  // Ball movement logic
+		  oldBallX = ballX;
+		  oldBallY = ballY;
+		  ballX += velX;
+		  ballY += velY;
+
+		  // Collision detection with screen bounds (assuming screen width = 320, height = 240)
+		  if (ballX <= 160 || ballX >= 320 - ballRadius) velX *= -1; // Bounce off left/right edges
+		  if (ballY <= ballRadius || ballY >= 240 - ballRadius) velY *= -1; // Bounce off top/bottom edges
+
+		  ili9341_fill_circle(ili9341_display, ILI9341_BLACK, oldBallX, oldBallY, ballRadius);
+	      ili9341_fill_circle(ili9341_display, ILI9341_WHITE, ballX, ballY, ballRadius);
+	      HAL_Delay(60);
+
 	  }
-
-
 
   }
 
@@ -457,17 +519,17 @@ int main(void)
 		  ili9341_fill_screen(ili9341_display, ILI9341_BLACK);
 		  playerScoreNum = 0;
 		  botScoreNum = 0;
-		  int16_t ballX = 0;
-		  int16_t ballY = 0;
-		  drawMenu();
+		  int16_t ballX = 160;
+		  int16_t ballY = 120;
+		  menuLogic();
 	  }
 	  if (botScoreNum > 9){
 		  ili9341_fill_screen(ili9341_display, ILI9341_BLACK);
 		  botScoreNum = 0;
 		  playerScoreNum = 0;
-		  int16_t ballX = 0;
-		  int16_t ballY = 0;
-		  drawMenu();
+		  int16_t ballX = 160;
+		  int16_t ballY = 120;
+		  menuLogic();
 	  }
 
 
@@ -479,7 +541,7 @@ int main(void)
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
-  drawMenu();
+  menuLogic();
   ili9341_fill_screen(ili9341_display, ILI9341_BLACK);
 
   while (1) {
