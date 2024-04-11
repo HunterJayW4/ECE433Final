@@ -162,13 +162,20 @@ int main(void)
   int16_t velocityY = 2;  // Initial velocity in the y-direction
   uint8_t playerScoreNum = 0;
   uint8_t botScoreNum = 0;
+  int gameDelay = 1;
   int pinValue = 1;
+
 
   //Menu Vars
   int index = 0;
   int change = 0;
   int initialIndex;
   ili9341_text_attr_t menuItems[3];
+
+  //Settings Vars
+  ili9341_text_attr_t settingsHeader;
+  ili9341_text_attr_t settings;
+  ili9341_text_attr_t gameSpeedHeader;
 
 
   // Define the text attributes
@@ -256,6 +263,21 @@ int main(void)
 	  help.bg_color = ILI9341_BLACK;  // Background color
 	  help.font = &ili9341_font_11x18;  // Use the desired font from ili9341_font.h
 
+	  // Define the text attributes for settings
+	  settingsHeader.origin_x = 10;  // X coordinate of the top-left corner of the character
+	  settingsHeader.origin_y = 20;  // Y coordinate of the top-left corner of the character
+	  settingsHeader.fg_color = ILI9341_WHITE;  // Color of the character
+	  settingsHeader.bg_color = ILI9341_BLACK;  // Background color
+	  settingsHeader.font = &ili9341_font_16x26;  // Use the desired font from ili9341_font.h
+
+	  // Define the text attributes for gameSpeed
+	  gameSpeedHeader.origin_x = 10;  // X coordinate of the top-left corner of the character
+	  gameSpeedHeader.origin_y = 120;  // Y coordinate of the top-left corner of the character
+	  gameSpeedHeader.fg_color = ILI9341_WHITE;  // Color of the character
+	  gameSpeedHeader.bg_color = ILI9341_BLACK;  // Background color
+	  gameSpeedHeader.font = &ili9341_font_11x18;  // Use the desired font from ili9341_font.h
+
+
 	  char myText[] = "PONG!";
 	  ili9341_draw_string(ili9341_display, menu, myText);
 
@@ -292,7 +314,21 @@ int main(void)
 		  }
 
 		  if (pinValue == 0 && index == 1) {
+			  ili9341_fill_screen(ili9341_display, ILI9341_BLACK);
+			  while (1){
+				  pinValue = (GPIOA->IDR & GPIO_IDR_ID8) ? 1 : 0;
+				  if (pinValue == 0)
+					  break;
 
+				  char settingsHeaderText[] = "SETTINGS:";
+				  ili9341_draw_string(ili9341_display, settingsHeader, settingsHeaderText);
+
+				  char gameSpeedText[] = "Game Speed:";
+				  ili9341_draw_string(ili9341_display, gameSpeedHeader, gameSpeedText);
+
+			  }
+
+			  drawMenu();
 		  }
 
 		  if (pinValue == 0 && index == 2) {
@@ -331,13 +367,13 @@ int main(void)
 
 		  if (change == 1){
 			  if (initialIndex == 1) {
-				  ili9341_fill_rect(ili9341_display, ILI9341_BLACK, menuItems[initialIndex].origin_x, menuItems[initialIndex].origin_y + 22, 100, 5);
+				  ili9341_fill_rect(ili9341_display, ILI9341_BLACK, menuItems[initialIndex].origin_x, menuItems[initialIndex].origin_y + 22, 90, 5);
 			  } else {
 				  ili9341_fill_rect(ili9341_display, ILI9341_BLACK, menuItems[initialIndex].origin_x, menuItems[initialIndex].origin_y + 22, 40, 5);
 			  }
 
 			  if (index == 1) {
-				  ili9341_fill_rect(ili9341_display, ILI9341_RED, menuItems[index].origin_x, menuItems[index].origin_y + 22, 100, 5);
+				  ili9341_fill_rect(ili9341_display, ILI9341_RED, menuItems[index].origin_x, menuItems[index].origin_y + 22, 90, 5);
 			  } else {
 				  ili9341_fill_rect(ili9341_display, ILI9341_RED, menuItems[index].origin_x, menuItems[index].origin_y + 22, 40, 5);
 			  }
@@ -414,7 +450,7 @@ int main(void)
           // Collision detected with the player's rectangle, reverse the ball's velocity
           // You can adjust the angle of reflection here if needed
           velocityX *= -1;
-          velocityY *= -1;
+          velocityY *= 1;
       }
 
       // Check for collision with the bot's rectangle
@@ -423,7 +459,7 @@ int main(void)
           // Collision detected with the bot's rectangle, reverse the ball's velocity
           // You can adjust the angle of reflection here if needed
           velocityX *= -1;
-          velocityY *= -1;
+          velocityY *= 1;
       }
 
       // Draw the ball at the new position
@@ -469,11 +505,11 @@ int main(void)
   	  if (potentiometer_value >= 1650 && potentiometer_value <= 1750) {
   		  direction = 0;
   		  movement_distance = 0;
-  	  } else if (potentiometer_value < 1650) {
+  	  } else if (potentiometer_value < 1675) {
   		  // Move down if potentiometer is down
   		  movement_distance =  abs(potentiometer_value - 1650) / 325;
   		  direction = 1;
-  	  } else if (potentiometer_value > 1800) {
+  	  } else if (potentiometer_value > 1725) {
   		  // Move up if potentiometer is up
   		  movement_distance = -abs(1750 - potentiometer_value) / 325;
   		  direction = -1;
@@ -506,7 +542,7 @@ int main(void)
   	  // Update the position of the rectangle
   	  playerY = new_y;
 
-  	  HAL_Delay(10);
+
     }
 
   void playGame() {
@@ -514,6 +550,7 @@ int main(void)
 	  calculateOtherRectangle();
 	  updateBallPosition();
 	  updateArena();
+  	  HAL_Delay(gameDelay);
 
 	  if (playerScoreNum > 9){
 		  ili9341_fill_screen(ili9341_display, ILI9341_BLACK);
