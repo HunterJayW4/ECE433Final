@@ -155,6 +155,7 @@ int main(void)
   int8_t movement_distance;
   uint8_t tmpCalc;
   int16_t new_y;
+  int16_t new_y_2;
   int8_t gameSpeed = 5;
   int16_t ballX = 160;
   int16_t ballY = 120;
@@ -164,6 +165,7 @@ int main(void)
   uint8_t botScoreNum = 0;
   int gameDelay = 1;
   int pinValue = 1;
+  uint8_t playerMode = 2;
 
 
   //Menu Vars
@@ -545,9 +547,61 @@ int main(void)
 
     }
 
+  void calculatePlayer2() {
+
+	  switchADCChannel(2);
+	  readADC2();
+	  switchADCChannel(1);
+
+  	  int8_t direction = 0;
+  	  if (potentiometer_value >= 1650 && potentiometer_value <= 1750) {
+  		  direction = 0;
+  		  movement_distance = 0;
+  	  } else if (potentiometer_value < 1650) {
+  		  // Move down if potentiometer is down
+  		  movement_distance =  abs(potentiometer_value - 1650) / 325;
+  		  direction = 1;
+  	  } else if (potentiometer_value > 1750) {
+  		  // Move up if potentiometer is up
+  		  movement_distance = -abs(1750 - potentiometer_value) / 325;
+  		  direction = -1;
+  	  }
+
+
+  	  // Calculate the new position of the rectangle
+  	  new_y_2 = botY + movement_distance;
+
+  	  // Check if the new position is within the bounds of the screen
+  	  if (new_y_2 < 0) {
+  		new_y_2 = 0;
+  	  } else if (new_y_2 + height > 240) {
+  		new_y_2 = 240 - height;
+  	  }
+
+		// Clear the portion of the screen where the rectangle was previously drawn
+		if (direction == 1 && botY >= 0) {
+			// If moving down and not at the top, clear the area above the new rectangle position
+			ili9341_fill_rect(ili9341_display, ILI9341_BLACK, botX, botY, width, new_y_2 - botY);
+		} else if (direction == -1 && botY + height < 240) {
+			// If moving up and not at the bottom, clear the area below the new rectangle position
+			ili9341_fill_rect(ili9341_display, ILI9341_BLACK, botX, botY + height, width, height + abs(movement_distance));
+		}
+
+	  	  // Draw the rectangle at the new position
+	  	  ili9341_fill_rect(ili9341_display, color, botX, new_y_2, width, height);
+
+	  	  // Update the position of the rectangle
+	  	  botY = new_y_2;
+  }
+
   void playGame() {
 	  calculateRectangle();
-	  calculateOtherRectangle();
+	  if (playerMode == 1){
+		  calculateOtherRectangle();
+	  } else {
+		  calculatePlayer2();
+	  }
+
 	  updateBallPosition();
 	  updateArena();
   	  HAL_Delay(gameDelay);
@@ -703,7 +757,7 @@ static void MX_ADC1_Init(void)
 
   /** Configure Regular Channel
   */
-  sConfig.Channel = ADC_CHANNEL_3;
+  sConfig.Channel = ADC_CHANNEL_1;
   sConfig.Rank = ADC_REGULAR_RANK_1;
   sConfig.SamplingTime = ADC_SAMPLETIME_2CYCLES_5;
   sConfig.SingleDiff = ADC_SINGLE_ENDED;
@@ -993,6 +1047,7 @@ static void MX_GPIO_Init(void)
   __HAL_RCC_GPIOC_CLK_ENABLE();
   __HAL_RCC_GPIOA_CLK_ENABLE();
   __HAL_RCC_GPIOB_CLK_ENABLE();
+  __HAL_RCC_GPIOE_CLK_ENABLE();
   __HAL_RCC_GPIOG_CLK_ENABLE();
   HAL_PWREx_EnableVddIO2();
 
@@ -1019,6 +1074,18 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 
+  /*Configure GPIO pin : PE15 */
+  GPIO_InitStruct.Pin = GPIO_PIN_15;
+  GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  HAL_GPIO_Init(GPIOE, &GPIO_InitStruct);
+
+  /*Configure GPIO pins : PB10 PB11 */
+  GPIO_InitStruct.Pin = GPIO_PIN_10|GPIO_PIN_11;
+  GPIO_InitStruct.Mode = GPIO_MODE_ANALOG;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+
   /*Configure GPIO pin : UCPD_FLT_Pin */
   GPIO_InitStruct.Pin = UCPD_FLT_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING;
@@ -1031,12 +1098,6 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(LED_GREEN_GPIO_Port, &GPIO_InitStruct);
-
-  /*Configure GPIO pin : PA8 */
-  GPIO_InitStruct.Pin = GPIO_PIN_8;
-  GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
-  GPIO_InitStruct.Pull = GPIO_PULLUP;
-  HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
 /* USER CODE BEGIN MX_GPIO_Init_2 */
 
@@ -1056,6 +1117,12 @@ static void MX_GPIO_Init(void)
     GPIO_InitStruct.Pin = GPIO_PIN_2; // DC pin
     // Other parameters remain the same from PB0 initialization
     HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+
+    /*Configure GPIO pin : PA8 */
+    GPIO_InitStruct.Pin = GPIO_PIN_8;
+    GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
+    GPIO_InitStruct.Pull = GPIO_PULLUP;
+    HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
 /* USER CODE END MX_GPIO_Init_2 */
 }
@@ -1085,6 +1152,20 @@ void setupADC() {
 		// Wait until ADC is Ready (ADRDY)
 		while(bitcheck(ADC1->ISR, 0)==0);
 }
+
+void switchADCChannel(uint32_t channel) {
+    // Ensure the channel number is within the valid range if necessary
+    // This example assumes channel numbering starts at 0 and is continuous.
+
+    // Configure ADC1 for 1 conversion
+    ADC1->SQR1 &= ~ADC_SQR1_L_Msk; // Clear sequence length to allow for 1 conversion
+    ADC1->SQR1 |= (0 << ADC_SQR1_L_Pos); // Set sequence length to 1 conversion
+
+    // Specify the channel as the first conversion in the sequence
+    ADC1->SQR1 &= ~(ADC_SQR1_SQ1_Msk); // Clear the existing channel setting
+    ADC1->SQR1 |= (channel << ADC_SQR1_SQ1_Pos); // Set the new channel
+}
+
 
 void setClks(){
 	RCC->APB1ENR1 |=1<<28;   // Enable the power interface clock by setting the PWREN bits
