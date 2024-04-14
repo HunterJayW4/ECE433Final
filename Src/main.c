@@ -349,7 +349,7 @@ int main(void)
 			  drawMenu();
 		  }
 
-		  if (potentiometer_value < 1650){
+		  if (potentiometer_value < 1600){
 			  if (index == 2){
 				  index = 2;
 			  }else {
@@ -395,7 +395,7 @@ int main(void)
 
 		  ili9341_fill_circle(ili9341_display, ILI9341_BLACK, oldBallX, oldBallY, ballRadius);
 	      ili9341_fill_circle(ili9341_display, ILI9341_WHITE, ballX, ballY, ballRadius);
-	      HAL_Delay(60);
+	      HAL_Delay(100);
 
 	  }
 
@@ -445,8 +445,8 @@ int main(void)
       }
 
       // Check for collision with the player's rectangle
-      if (ballX + 4 >= playerX && ballX - 4 <= playerX + width &&
-          ballY + 4 >= playerY && ballY - 4 <= playerY + height) {
+      if (ballX + 4 > playerX && ballX - 4 <= playerX + width &&
+          ballY + 4 > playerY && ballY - 4 <= playerY + height) {
           // Collision detected with the player's rectangle, reverse the ball's velocity
           // You can adjust the angle of reflection here if needed
           velocityX *= -1;
@@ -454,8 +454,8 @@ int main(void)
       }
 
       // Check for collision with the bot's rectangle
-      if (ballX + 4 >= botX && ballX - 4 <= botX + width &&
-          ballY + 4 >= botY && ballY - 4 <= botY + height) {
+      if (ballX + 4 > botX && ballX - 4 <= botX + width &&
+          ballY + 4 > botY && ballY - 4 <= botY + height) {
           // Collision detected with the bot's rectangle, reverse the ball's velocity
           // You can adjust the angle of reflection here if needed
           velocityX *= -1;
@@ -505,11 +505,11 @@ int main(void)
   	  if (potentiometer_value >= 1650 && potentiometer_value <= 1750) {
   		  direction = 0;
   		  movement_distance = 0;
-  	  } else if (potentiometer_value < 1675) {
+  	  } else if (potentiometer_value < 1650) {
   		  // Move down if potentiometer is down
   		  movement_distance =  abs(potentiometer_value - 1650) / 325;
   		  direction = 1;
-  	  } else if (potentiometer_value > 1725) {
+  	  } else if (potentiometer_value > 1750) {
   		  // Move up if potentiometer is up
   		  movement_distance = -abs(1750 - potentiometer_value) / 325;
   		  direction = -1;
@@ -527,7 +527,7 @@ int main(void)
 
 
   	// Clear the portion of the screen where the rectangle was previously drawn
-  	if (direction == 1 && playerY > 0) {
+  	if (direction == 1 && playerY >= 0) {
   	    // If moving down and not at the top, clear the area above the new rectangle position
   	    ili9341_fill_rect(ili9341_display, ILI9341_BLACK, playerX, playerY, width, new_y - playerY);
   	} else if (direction == -1 && playerY + height < 240) {
