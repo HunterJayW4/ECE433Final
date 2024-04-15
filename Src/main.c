@@ -167,6 +167,9 @@ int main(void)
   int pinValue = 1;
   uint8_t playerMode = 2;
 
+  char gameSpeedText[50];
+
+
 
   //Menu Vars
   int index = 0;
@@ -318,6 +321,7 @@ int main(void)
 		  if (pinValue == 0 && index == 1) {
 			  ili9341_fill_screen(ili9341_display, ILI9341_BLACK);
 			  while (1){
+				  readADC2();
 				  pinValue = (GPIOA->IDR & GPIO_IDR_ID8) ? 1 : 0;
 				  if (pinValue == 0)
 					  break;
@@ -325,7 +329,19 @@ int main(void)
 				  char settingsHeaderText[] = "SETTINGS:";
 				  ili9341_draw_string(ili9341_display, settingsHeader, settingsHeaderText);
 
-				  char gameSpeedText[] = "Game Speed:";
+				  if (potentiometer_value < 1600)
+					  playerMode = 1;
+
+				  if (potentiometer_value > 1800)
+					  playerMode = 2;
+
+				  char gameSpeedText[] = "TMP";
+				  if (playerMode == 1) {
+					  strcpy(gameSpeedText, "Mode: Singleplayer");
+				  } else {
+					  strcpy(gameSpeedText, "Mode: 2-Player");
+
+				  }
 				  ili9341_draw_string(ili9341_display, gameSpeedHeader, gameSpeedText);
 
 			  }
@@ -395,8 +411,8 @@ int main(void)
 		  if (ballX <= 160 || ballX >= 320 - ballRadius) velX *= -1; // Bounce off left/right edges
 		  if (ballY <= ballRadius || ballY >= 240 - ballRadius) velY *= -1; // Bounce off top/bottom edges
 
-		  ili9341_fill_circle(ili9341_display, ILI9341_BLACK, oldBallX, oldBallY, ballRadius);
-	      ili9341_fill_circle(ili9341_display, ILI9341_WHITE, ballX, ballY, ballRadius);
+		  //ili9341_fill_circle(ili9341_display, ILI9341_BLACK, oldBallX, oldBallY, ballRadius);
+	      //ili9341_fill_circle(ili9341_display, ILI9341_WHITE, ballX, ballY, ballRadius);
 	      HAL_Delay(100);
 
 	  }
